@@ -14,49 +14,38 @@ const { NotImplementedError } = require('../extensions/index.js')
  *
  */
 function transform(arr) {
-	if (!(arr instanceof Array)) {
+	if (!Array.isArray(arr)) {
 		throw new Error("'arr' parameter must be an instance of the Array!")
 	}
 
-	let res = []
-
+	const result = []
 	for (let i = 0; i < arr.length; i++) {
-		const element = arr[i]
-		const nextElement = arr[i + 1]
-		const prevElement = arr[i - 1]
-
-		if (typeof element === 'string' && element.startsWith('--')) {
-			const [action, position] = element.replace('--', '').split('-')
-
-			if (action === 'double') {
-				if (position === 'next' && !!nextElement) {
-					res.push(nextElement)
-					res.push(nextElement)
+		switch (arr[i]) {
+			case '--discard-next':
+				i++
+				break
+			case '--discard-prev':
+				if (result.length > 0 && arr[i - 2] !== '--discard-next') {
+					result.pop()
 				}
-				if (position === 'prev' && !!prevElement) {
-					res.push(prevElement)
-					res.push(prevElement)
+				break
+			case '--double-next':
+				if (i + 1 < arr.length) {
+					result.push(arr[i + 1])
 				}
-
-				return
-			}
-
-			if (action === 'discard') {
-				if (position === 'next' && !!nextElement) {
-					res = [...res.slice(0, nextElement, ...res.slice(nextElement + 1))]
+				break
+			case '--double-prev':
+				if (i > 0 && arr[i - 2] !== '--discard-next') {
+					result.push(arr[i - 1])
 				}
-				if (position === 'prev' && !!prevElement) {
-					res.pop()
-				}
-
-				return
-			}
+				break
+			default:
+				result.push(arr[i])
+				break
 		}
-
-		res.push(element)
 	}
 
-	return res
+	return result
 }
 
 module.exports = {
